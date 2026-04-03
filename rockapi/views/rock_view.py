@@ -37,12 +37,29 @@ class RockView(ViewSet):
         Returns:
             Response -- JSON serialized array
         """
+        # Get query string parameter
+        owner_only = self.request.query_params.get("owner", None)
+
         try:
+            # Start with all rows
             rocks = Rock.objects.all()
+
+            # If `?owner=current` is in the URL
+            if owner_only is not None and owner_only == "current":
+                # Filter to only the current user's rocks
+                rocks = rocks.filter(user=request.auth.user)
+
             serializer = RockSerializer(rocks, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as ex:
             return HttpResponseServerError(ex)
+
+        # try:
+        #     rocks = Rock.objects.all()
+        #     serializer = RockSerializer(rocks, many=True)
+        #     return Response(serializer.data, status=status.HTTP_200_OK)
+        # except Exception as ex:
+        #     return HttpResponseServerError(ex)
 
     def destroy(self, request, pk=None):
         """Handle DELETE requests for a single item
